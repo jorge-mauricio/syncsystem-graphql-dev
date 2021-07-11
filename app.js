@@ -4,14 +4,16 @@ const bodyParser = require('body-parser');
 const graphqlHTTP = require('express-graphql').graphqlHTTP;
 const { buildSchema } = require('graphql');
 const mongoose = require('mongoose');
+const bcrypt = require('bcryptjs');
 
 //Import the mongodb model.
 const Event = require('./models/event')
+const User = require('./models/user')
 
 const app = express();
 
 //debug test (store in memory).
-const events = [];
+const events = []; //debug test
 
 app.use(bodyParser.json());
 
@@ -45,11 +47,22 @@ app.use('/graphql',
                 date: String!
             }
 
+            type User {
+                _id: ID!
+                email: String!
+                password: String
+            }
+
             input EventInput {
                 title: String!
                 description: String!
                 price: Float!
                 date: String!
+            }
+
+            input UserInput {
+                email: String!
+                password: String!
             }
 
             type RootQuery {
@@ -58,6 +71,7 @@ app.use('/graphql',
 
             type RootMutation {
                 createEvent(eventInput: EventInput): Event
+                createUser(userInput: UserInput): User
             }
 
             schema {
@@ -98,7 +112,9 @@ app.use('/graphql',
                     description: args.eventInput.description,
                     price: args.eventInput.price,
                     date: new Date(args.eventInput.date),
-                })
+                    creator: '60eb48fcec2df53f74c98508' //debug test
+                });
+                let createdEvent;
 
 
                 //const eventName = args.name; //same name as the argument defined in the mutation type
@@ -108,17 +124,58 @@ app.use('/graphql',
                 //return event;
 
 
-                //Sabe to database.
+                //Save to database.
                 return event
                 .save()
                 .then(dbWriteResult => {
-                    console.log("dbWriteResult=", dbWriteResult);
-                    return {...dbWriteResult._doc};
-                }).catch(dbWriteError => {
+                    createdEvent = { ...dbWriteResult._doc, _id: dbWriteResult._doc._id.toString() };
+                    return User.findById('60eb48fcec2df53f74c98508'); //debug test
+                    //console.log("dbWriteResult=", dbWriteResult);
+                    //return {...dbWriteResult._doc};
+                    //return {...dbWriteResult._doc, _id: dbWriteResult._doc._id.toString()};
+                })
+                .then(userFindDB => {
+                    if(!userFindDB)
+                    {
+                        throw new Error('User doen´t exist.');
+                    }
+
+                    userFindDB.createdEvents.push(event); //mongoose feature
+                    return userFindDB.save(); //update existing user 
+
+                })
+                .then(updateResult => {
+                    return createdEvent;
+                })
+                .catch(dbWriteError => {
                     console.log("dbWriteError=", dbWriteError);
                     throw dbWriteError;
                 });
                 //return event;
+            },
+            createUser: args => {
+                return User.findOne({email: args.userInput.email}).then(userFromDB => {
+                    if(userFromDB) { //user found
+                        throw new Error ('user exists already.');
+                    }
+
+                    return bcrypt.hash(args.userInput.password, 12);
+                })
+                .then(hashedPassword => {
+                    //Create user
+                    const user = new User({
+                        email: args.userInput.email,
+                        password: hashedPassword
+                    });
+                    return user.save();
+                })
+                .then(saveResult => {
+                    //return {...saveResult._doc, _id: saveResult.id };
+                    return {...saveResult._doc, password: null, _id: saveResult.id }; //don´t retrieve password (overwrite password)
+                })
+                .catch(hashError => {
+                    throw hashError;
+                });
             }
         },
         //User interface tool
@@ -150,6 +207,17 @@ app.use('/graphql',
             }){
                 title
                 description    
+            }
+        }
+
+
+        mutation {
+            createUser(userInput: {
+                email: "jm4@jm.com",
+                password: "jm123",
+            }){
+                email
+                password    
             }
         }
         */
