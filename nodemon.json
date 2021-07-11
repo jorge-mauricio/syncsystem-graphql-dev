@@ -1,0 +1,7 @@
+{
+    "env": {
+        "MONGO_USER": "syncsystem_dev",
+        "MONGO_PASSWORD": "dev",
+        "MONGO_DATABASE": "syncsystem-graphql-dev" //collection
+    }
+}
