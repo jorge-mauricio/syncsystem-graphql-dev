@@ -2,18 +2,24 @@ const express = require('express');
 const bodyParser = require('body-parser');
 //const graphqlHttp = require('express-graphql');
 const graphqlHTTP = require('express-graphql').graphqlHTTP;
-const { buildSchema } = require('graphql');
+//const { buildSchema } = require('graphql');
 const mongoose = require('mongoose');
-const bcrypt = require('bcryptjs');
+//const bcrypt = require('bcryptjs');
 
 //Import the mongodb model.
-const Event = require('./models/event')
-const User = require('./models/user')
+//const Event = require('./models/event')
+//const User = require('./models/user')
+
+const graphQLSchema = require('./graphql/schema/index')
+const graphQLResolvers = require('./graphql/resolvers/index')
 
 const app = express();
 
+
+
+
 //debug test (store in memory).
-const events = []; //debug test
+//const events = []; //debug test
 
 app.use(bodyParser.json());
 
@@ -38,146 +44,9 @@ app.use('/graphql',
             }`
         ),
         */
-        schema: buildSchema(`
-            type Event {
-                _id: ID!
-                title: String!
-                description: String!
-                price: Float!
-                date: String!
-            }
-
-            type User {
-                _id: ID!
-                email: String!
-                password: String
-            }
-
-            input EventInput {
-                title: String!
-                description: String!
-                price: Float!
-                date: String!
-            }
-
-            input UserInput {
-                email: String!
-                password: String!
-            }
-
-            type RootQuery {
-                events: [Event!]!
-            }
-
-            type RootMutation {
-                createEvent(eventInput: EventInput): Event
-                createUser(userInput: UserInput): User
-            }
-
-            schema {
-                query: RootQuery
-                mutation: RootMutation
-            }`
-        ),
+        schema: graphQLSchema,
         //Resolver (need to have same names).
-        rootValue: {
-            //Resolver for reading array of strings.
-            events: () => {
-                //return ['Romantic cooking', 'Sailing', 'All night coding']; //debug test
-                //return events; //debug test
-
-                return Event.find()
-                .then(dbReadResults => {
-                    return dbReadResults.map(event =>{
-                        //return { ...event._doc };
-                        //return { ...event._doc, _id: event._doc._id.toString() }; //transform id (mongodb object) to string readable in api
-                        return { ...event._doc, _id: event.id }; //virtual getter provided by mongoose
-                    });
-                }).catch(dbReadError =>{
-                    throw dbReadError;
-                });
-            },
-            createEvent: (args) => {
-                // const event = {
-                //     _id: Math.random().toString(),
-                //     title: args.eventInput.title,
-                //     description: args.eventInput.description,
-                //     price: +args.eventInput.price,
-                //     //date: new Date().toISOString()
-                //     date: args.eventInput.date
-                // }
-
-                const event = new Event({
-                    title: args.eventInput.title,
-                    description: args.eventInput.description,
-                    price: args.eventInput.price,
-                    date: new Date(args.eventInput.date),
-                    creator: '60eb48fcec2df53f74c98508' //debug test
-                });
-                let createdEvent;
-
-
-                //const eventName = args.name; //same name as the argument defined in the mutation type
-                //return eventName;
-
-                //events.push(event);
-                //return event;
-
-
-                //Save to database.
-                return event
-                .save()
-                .then(dbWriteResult => {
-                    createdEvent = { ...dbWriteResult._doc, _id: dbWriteResult._doc._id.toString() };
-                    return User.findById('60eb48fcec2df53f74c98508'); //debug test
-                    //console.log("dbWriteResult=", dbWriteResult);
-                    //return {...dbWriteResult._doc};
-                    //return {...dbWriteResult._doc, _id: dbWriteResult._doc._id.toString()};
-                })
-                .then(userFindDB => {
-                    if(!userFindDB)
-                    {
-                        throw new Error('User doen´t exist.');
-                    }
-
-                    userFindDB.createdEvents.push(event); //mongoose feature
-                    return userFindDB.save(); //update existing user 
-
-                })
-                .then(updateResult => {
-                    return createdEvent;
-                })
-                .catch(dbWriteError => {
-                    console.log("dbWriteError=", dbWriteError);
-                    throw dbWriteError;
-                });
-                //return event;
-            },
-            createUser: args => {
-                return User.findOne({email: args.userInput.email}).then(userFromDB => {
-                    if(userFromDB) { //user found
-                        throw new Error ('user exists already.');
-                    }
-
-                    return bcrypt.hash(args.userInput.password, 12);
-                })
-                .then(hashedPassword => {
-                    //Create user
-                    const user = new User({
-                        email: args.userInput.email,
-                        password: hashedPassword
-                    });
-                    return user.save();
-                })
-                .then(saveResult => {
-                    //return {...saveResult._doc, _id: saveResult.id };
-                    return {...saveResult._doc, password: null, _id: saveResult.id }; //don´t retrieve password (overwrite password)
-                })
-                .catch(hashError => {
-                    throw hashError;
-                });
-            }
-        },
+        rootValue: graphQLResolvers,
         //User interface tool
         graphiql: true
         /*
@@ -197,6 +66,24 @@ app.use('/graphql',
                 price
             }
         }  
+
+        query{
+            events {
+              	_id
+                title
+                price
+              	creator	{
+                  _id
+                  email
+                  createdEvents {
+                    title
+                  }
+                }
+            }
+        }  
+
+
+
         
         mutation {
             createEvent(eventInput: {
@@ -218,6 +105,22 @@ app.use('/graphql',
             }){
                 email
                 password    
+            }
+        }
+
+
+        mutation {
+            createEvent(eventInput: {
+                title: "More events changed after optimization",
+                description: "some description",
+                price: 9.99,
+                date: "2021-07-10T23:39:55.882Z"
+            }){
+                title
+                description  
+            		creator {
+                  email
+                }
             }
         }
         */
