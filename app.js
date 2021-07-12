@@ -80,9 +80,23 @@ app.use('/graphql',
                   }
                 }
             }
+        }  //returns error after restructure
+
+
+        query{
+            events {
+
+                title
+                price
+              	creator	{
+
+                  email
+                  createdEvents {
+                    title
+                  }
+                }
+            }
         }  
-
-
 
         
         mutation {
