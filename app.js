@@ -98,6 +98,19 @@ app.use('/graphql',
             }
         }  
 
+        query{
+            bookings {
+                createdAt
+              	event {
+                    title
+                    creator {
+                        email
+                    }
+                  }
+                }
+            }
+  
+
         
         mutation {
             createEvent(eventInput: {
@@ -137,6 +150,18 @@ app.use('/graphql',
                 }
             }
         }
+
+        mutation {
+            cancelBooking(bookingId: "60eb94b159223d5f34271aaa") {
+                title
+                creator {
+                    email
+                }
+            }
+        }
+
+        
+
         */
     })
 );
