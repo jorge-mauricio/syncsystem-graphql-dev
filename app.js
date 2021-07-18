@@ -85,7 +85,7 @@ app.use('/graphql',
 
         query{
             events {
-
+                _id
                 title
                 price
               	creator	{
@@ -150,6 +150,15 @@ app.use('/graphql',
                 }
             }
         }
+
+        mutation {
+            bookEvent(eventId: "60eb8b7e8137eb5f6c405b46"){
+            _id
+            user{
+              email
+            }
+          }
+        }        
 
         mutation {
             cancelBooking(bookingId: "60eb94b159223d5f34271aaa") {
