@@ -7,7 +7,14 @@ const { singleEvent, user, transformEvent, transformBooking, dateToString } = re
 
 module.exports = {
 
-    bookings: async () => {
+    //bookings: async () => {
+    bookings: async (args, req) => {
+        //Check if user has an authenticated token
+        if (!req.isAuth) {
+            throw new Error('user unauthenticated!');
+        }
+
+
         try {
             const bookings = await Booking.find();
 
@@ -33,7 +40,14 @@ module.exports = {
         }
     },
 
-    bookEvent: async args => {
+    //bookEvent: async args => {
+    bookEvent: async (args, req) => {
+        //Check if user has an authenticated token
+        if (!req.isAuth) {
+            throw new Error('user unauthenticated!');
+        }
+
+
         const fetchedEvent = await Event.findOne({_id: args.eventId});
         const booking = new Booking({
             user: '60eb48fcec2df53f74c98508',
@@ -57,7 +71,14 @@ module.exports = {
 
     },
 
-    cancelBooking: async args => {
+    //cancelBooking: async args => {
+    cancelBooking: async (args, req) => {
+        //Check if user has an authenticated token
+        if (!req.isAuth) {
+            throw new Error('user unauthenticated!');
+        }
+
+
         try {
             //console.log("args=", args);
             const booking = await Booking.findById(args.bookingId).populate('event');

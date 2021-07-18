@@ -1,4 +1,5 @@
 const Event = require('../../models/event');
+const User = require('../../models/user');
 
 //const { dateToString } = require('../../helpers/date');
 //const { events, singleEvent, user } = require('./merge');
@@ -54,7 +55,13 @@ module.exports = {
 
 
 
-    createEvent: async (args) => {
+    //createEvent: async (args) => {
+    createEvent: async (args, req) => { //default, receives two arguments - arguments and request
+        //Check if user has an authenticated token
+        if (!req.isAuth) {
+            throw new Error('user unauthenticated!');
+        }
+
         // const event = {
         //     _id: Math.random().toString(),
         //     title: args.eventInput.title,

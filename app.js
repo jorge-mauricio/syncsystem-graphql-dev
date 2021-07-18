@@ -10,8 +10,9 @@ const mongoose = require('mongoose');
 //const Event = require('./models/event')
 //const User = require('./models/user')
 
-const graphQLSchema = require('./graphql/schema/index')
-const graphQLResolvers = require('./graphql/resolvers/index')
+const graphQLSchema = require('./graphql/schema/index');
+const graphQLResolvers = require('./graphql/resolvers/index');
+const isAuth = require('./middleware/is-auth');
 
 const app = express();
 
@@ -22,6 +23,10 @@ const app = express();
 //const events = []; //debug test
 
 app.use(bodyParser.json());
+
+
+app.use(isAuth); //define middleware
+
 
 
 //GraphQL middleware.
@@ -110,7 +115,13 @@ app.use('/graphql',
                 }
             }
   
-
+        query{
+            login(email: "jm@jm.com", password: "123") {
+                userId
+                token
+                tokenExpiration
+            }
+        }
         
         mutation {
             createEvent(eventInput: {
