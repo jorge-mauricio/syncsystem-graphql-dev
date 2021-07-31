@@ -37,7 +37,7 @@ class App extends Component {
   };
   
   render() {
-    
+
     console.log("this.context.token=", this.context.token);
 
     return (
@@ -53,7 +53,6 @@ class App extends Component {
             <MainNavigation />
             <main className="main-content">
               <Switch>
-                {!this.context.token && <Redirect from="/" to="/auth" exact />}
                 {this.context.token && <Redirect from="/" to="/events" exact />}
                 {this.context.token && <Redirect from="/auth" to="/events" exact />}
                 
@@ -61,7 +60,10 @@ class App extends Component {
                 
                 <Route path="/events" component={EventsPage} />
 
-                {!this.context.token && <Route path="/bookings" component={BookingsPage} />}
+                {this.context.token && <Route path="/bookings" component={BookingsPage} />}
+
+                {!this.context.token && <Redirect from="/" to="/auth" exact />}
+                {!this.context.token && <Redirect from="/bookings" to="/auth" exact />}
               </Switch>
             </main>
           </AuthContext.Provider>
