@@ -6,6 +6,8 @@ const graphqlHTTP = require('express-graphql').graphqlHTTP;
 const mongoose = require('mongoose');
 //const bcrypt = require('bcryptjs');
 
+const cors = require('cors')
+
 //Import the mongodb model.
 //const Event = require('./models/event')
 //const User = require('./models/user')
@@ -24,7 +26,66 @@ const app = express();
 
 app.use(bodyParser.json());
 
+//Add headers for CORS.
+/*
+app.use((req, res, next) => {
+    //res.setHeader('Access-Control-Allow-Origin', '*');
+    res.header('Access-Control-Allow-Origin', '*');
+    //res.setHeader('Access-Control-Allow-Origin', 'http://localhost:3000');
+    //res.setHeader('Access-Control-Allow-Methods', 'POST, GET, OPTIONS');
+    //res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS, PUT, PATCH, DELETE');
+    res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS');
+    //res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+    //res.setHeader('Access-Control-Allow-Headers', 'X-Requested-With,content-type');
+    //res.header('Access-Control-Allow-Headers', 'content-type');
+    res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, Authorization");
 
+    // Set to true if you need the website to include cookies in the requests sent
+    // to the API (e.g. in case you use sessions)
+    //res.setHeader('Access-Control-Allow-Credentials', true);
+    
+    //if (req.method === 'OPTIONS') {
+    //    return res.sendStatus(200);
+    //}
+    next();
+});
+*///didn´t work - research further
+app.use(cors());
+
+
+// Add headers
+/*
+app.use(function (req, res, next) {
+
+    // Website you wish to allow to connect
+    res.setHeader('Access-Control-Allow-Origin', 'http://localhost:8888');
+
+    // Request methods you wish to allow
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS, PUT, PATCH, DELETE');
+
+    // Request headers you wish to allow
+    res.setHeader('Access-Control-Allow-Headers', 'X-Requested-With,content-type');
+
+    // Set to true if you need the website to include cookies in the requests sent
+    // to the API (e.g. in case you use sessions)
+    res.setHeader('Access-Control-Allow-Credentials', true);
+
+    // Pass to next layer of middleware
+    next();
+});
+*/
+/*
+app.use(function(req, res, next) {
+    res.header("Access-Control-Allow-Origin", "*");
+    res.header(
+      "Access-Control-Allow-Headers",
+      "Origin, X-Requested-With, Content-Type, Accept"
+    );
+    res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS');
+
+    next();
+});
+*/
 app.use(isAuth); //define middleware
 
 
@@ -195,7 +256,7 @@ mongoose.connect(
     }@syncsystem-graphql-dev.apy3s.mongodb.net/${process.env.MONGO_DATABASE}?retryWrites=true&w=majority`
 ).then(()=>{
     //Start server.
-    app.listen(3000);
+    app.listen(3001);
 }).catch(dbConError => {
     console.log("dbConError=", dbConError);
 });
